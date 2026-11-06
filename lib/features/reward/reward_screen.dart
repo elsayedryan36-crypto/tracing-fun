@@ -1,0 +1,56 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
+import '../../data/services/return_interstitial_service.dart';
+import '../../presentation/common/localization/app_language.dart';
+import '../../presentation/common/resources/color_manager.dart';
+import '../../presentation/common/resources/values_manager.dart';
+import '../letters/letter_item.dart';
+
+/// Shown after a successful trace.
+///
+/// v1: shows the reward picture. Colouring with the painting tools is planned
+/// for a later version (see TRACING_APP_SPEC.md).
+class RewardScreen extends StatelessWidget {
+  const RewardScreen({super.key, required this.item});
+
+  final LetterItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: ValueListenableBuilder<String>(
+          valueListenable: AppLanguage.current,
+          builder: (context, _, _) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                tr('well_done'),
+                style: TextStyle(
+                  fontSize: AppPx.p20,
+                  fontWeight: FontWeight.w800,
+                  color: ColorManager.darkPrimary,
+                ),
+              ),
+              SizedBox(height: AppPx.p8),
+              SizedBox(
+                width: AppPx.p150,
+                height: AppPx.p150,
+                child: SvgPicture.asset(item.picture, fit: BoxFit.contain),
+              ),
+              SizedBox(height: AppPx.p12),
+              ElevatedButton(
+                onPressed: () {
+                  ReturnInterstitialService.instance.markTracingSession();
+                  Navigator.of(context).pop();
+                },
+                child: Text(tr('next')),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Existing launcher icon color -->
+    <color name="ic_launcher_background">#FFFFFF</color>
+
+    <!-- Android launch splash background -->
+    <color name="splash_background">#95B8D1</color>
+
+</resources>
