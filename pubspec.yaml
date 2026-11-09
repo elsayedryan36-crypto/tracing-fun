@@ -35,6 +35,8 @@ flutter:
     - assets/images/
     - assets/images/letters/
     - assets/images/numbers/
+    - assets/images/words/
+    - assets/letters/outlines/
     - assets/images/dragons/
     - assets/images/zoo/
     - assets/images/sea/

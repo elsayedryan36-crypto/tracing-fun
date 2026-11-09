@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../presentation/common/localization/app_language.dart';
 import '../../presentation/common/resources/color_manager.dart';
-import '../../presentation/common/resources/font_manager.dart';
 import '../../presentation/common/resources/routs_manager.dart';
 import '../../presentation/common/resources/values_manager.dart';
 import '../../presentation/common/services/sound_service.dart';
@@ -123,18 +123,14 @@ class _TraceArea extends StatelessWidget {
                 height: side,
                 child: Stack(
                   children: [
-                    // Guide: the letter in light grey, for the child to follow.
-                    Center(
-                      child: Text(
-                        item.glyph,
-                        style: TextStyle(
-                          fontFamily: item.group == LetterGroup.arabic
-                              ? FontConstants.arabicFont
-                              : null,
-                          fontSize: side * 0.8,
-                          fontWeight: FontWeight.w800,
-                          color: ColorManager.lightGrey,
-                        ),
+                    // Guide: the letter outline in light grey, for the child to follow.
+                    SvgPicture.asset(
+                      item.outline,
+                      width: side,
+                      height: side,
+                      colorFilter: ColorFilter.mode(
+                        ColorManager.lightGrey,
+                        BlendMode.srcIn,
                       ),
                     ),
                     CustomPaint(

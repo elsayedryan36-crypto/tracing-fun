@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../data/services/return_interstitial_service.dart';
 import '../../presentation/common/localization/app_language.dart';
 import '../../presentation/common/resources/color_manager.dart';
+import '../../presentation/common/resources/font_manager.dart';
 import '../../presentation/common/resources/values_manager.dart';
 import '../letters/letter_item.dart';
 
@@ -34,11 +35,39 @@ class RewardScreen extends StatelessWidget {
                 ),
               ),
               SizedBox(height: AppPx.p8),
-              SizedBox(
-                width: AppPx.p150,
-                height: AppPx.p150,
-                child: SvgPicture.asset(item.picture, fit: BoxFit.contain),
+              SizedBox(height: AppPx.p8),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: AppPx.p150,
+                    height: AppPx.p150,
+                    child: SvgPicture.asset(item.picture, fit: BoxFit.contain),
+                  ),
+                  if (item.wordPicture != null) ...[
+                    SizedBox(width: AppPx.p12),
+                    SizedBox(
+                      width: AppPx.p150,
+                      height: AppPx.p150,
+                      child: Image.asset(item.wordPicture!, fit: BoxFit.contain),
+                    ),
+                  ],
+                ],
               ),
+              if (item.word != null) ...[
+                SizedBox(height: AppPx.p8),
+                Text(
+                  item.word!,
+                  style: TextStyle(
+                    fontFamily: item.group == LetterGroup.arabic
+                        ? FontConstants.arabicFont
+                        : null,
+                    fontSize: AppPx.p20,
+                    fontWeight: FontWeight.w800,
+                    color: ColorManager.darkPrimary,
+                  ),
+                ),
+              ],
               SizedBox(height: AppPx.p12),
               ElevatedButton(
                 onPressed: () {
