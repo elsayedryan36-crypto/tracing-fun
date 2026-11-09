@@ -92,3 +92,8 @@ Numbers have an Arabic word and an English word. The app needs one of them on th
 - ظبي and غيمة are less common words for young children. Replace them if you prefer.
 - Numbers: the app shows one word per item. Decide whether to show Arabic, English, or both.
 - Pictures are not made yet. They will be made after you approve this list.
+
+## Picture status
+- Done: ar_0 to ar_14, en_0 to en_5, en_11, en_18 (in assets/images/words/).
+- Still to make: ar_15 to ar_27, and en_6 to en_10, en_12 to en_17, en_19 to en_25. en_6 (Grapes) can reuse ar_17; en_12 (Moon) can reuse ar_20.
+- Numbers: no pictures (words only). The app shows the English word for numbers for now.

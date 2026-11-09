@@ -29,10 +29,10 @@ class LetterItem {
   /// Coloring-page picture shown after a successful trace (kept from the coloring app).
   final String picture;
 
-  /// Word for the letter, e.g. `تفاحة` or `Apple`. Null until the word is added.
+  /// Word for the letter (see docs/word-list.md). Null for numbers without a word.
   final String? word;
 
-  /// Word picture (AI-generated illustration). Null until it is added.
+  /// Word picture (AI-generated illustration). Null until the picture is made.
   final String? wordPicture;
 
   /// Outline SVG shown on the tracing screen.
@@ -58,23 +58,34 @@ class LetterCatalog {
 
   static const int freePerLanguage = 5;
 
-  /// Words for the letters that have a picture so far. Index = position in the group.
-  /// Add more here as the owner approves each word.
-  static const Map<int, String> _arabicWords = {
-    0: 'أسد',
-    1: 'بطة',
-    2: 'تفاحة',
-    3: 'ثعلب',
-    4: 'جمل',
+  /// Words from docs/word-list.md (approved draft). Index = position in the group.
+  static const List<String> _arabicWords = [
+    'أسد', 'بطة', 'تفاحة', 'ثعلب', 'جمل', 'حصان', 'خروف', 'دب', 'ذئب', 'رمان',
+    'زرافة', 'سمكة', 'شمس', 'صقر', 'ضفدع', 'طائرة', 'ظبي', 'عنب', 'غيمة', 'فيل',
+    'قمر', 'كتاب', 'ليمون', 'موزة', 'نحلة', 'هرم', 'وردة', 'يمامة',
+  ];
+
+  static const List<String> _englishWords = [
+    'Apple', 'Ball', 'Cat', 'Dog', 'Egg', 'Fish', 'Grapes', 'House', 'Ice cream',
+    'Juice', 'Kite', 'Lion', 'Moon', 'Nest', 'Orange', 'Pig', 'Queen', 'Rabbit',
+    'Sun', 'Tree', 'Umbrella', 'Van', 'Watermelon', 'Xylophone', 'Yo-yo', 'Zebra',
+  ];
+
+  /// Words for numbers 0–10 (English; the Arabic words are in docs/word-list.md).
+  static const List<String> _numberWords = [
+    'Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
+  ];
+
+  /// Letters that have a word picture file in assets/images/words/.
+  /// Add an ID here when its picture file is added.
+  static const Set<String> _pictured = {
+    'ar_0', 'ar_1', 'ar_2', 'ar_3', 'ar_4', 'ar_5', 'ar_6', 'ar_7', 'ar_8', 'ar_9',
+    'ar_10', 'ar_11', 'ar_12', 'ar_13', 'ar_14',
+    'en_0', 'en_1', 'en_2', 'en_3', 'en_4', 'en_5', 'en_11', 'en_18',
   };
 
-  static const Map<int, String> _englishWords = {
-    0: 'Apple',
-    1: 'Ball',
-    2: 'Cat',
-    3: 'Dog',
-    4: 'Egg',
-  };
+  static String? _wordPictureFor(String id) =>
+      _pictured.contains(id) ? 'assets/images/words/$id.png' : null;
 
   /// Coloring-page pictures from the coloring app. Cycled per item.
   static const List<String> _pictures = [
@@ -105,9 +116,7 @@ class LetterCatalog {
               free: i < freePerLanguage,
               picture: _pictureFor(i),
               word: _arabicWords[i],
-              wordPicture: _arabicWords.containsKey(i)
-                  ? 'assets/images/words/ar_$i.png'
-                  : null,
+              wordPicture: _wordPictureFor('ar_$i'),
             ),
         ];
       case LetterGroup.english:
@@ -121,9 +130,7 @@ class LetterCatalog {
               free: i < freePerLanguage,
               picture: _pictureFor(i + 3),
               word: _englishWords[i],
-              wordPicture: _englishWords.containsKey(i)
-                  ? 'assets/images/words/en_$i.png'
-                  : null,
+              wordPicture: _wordPictureFor('en_$i'),
             ),
         ];
       case LetterGroup.numbers:
@@ -136,6 +143,7 @@ class LetterCatalog {
               index: i,
               free: false,
               picture: _pictureFor(i + 5),
+              word: _numberWords[i],
             ),
         ];
     }

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tracing_app/features/letters/letter_item.dart';
 
@@ -47,5 +49,23 @@ void main() {
     final en = LetterCatalog.byGroup(LetterGroup.english);
     expect([for (final i in ar.take(5)) i.word], ['أسد', 'بطة', 'تفاحة', 'ثعلب', 'جمل']);
     expect([for (final i in en.take(5)) i.word], ['Apple', 'Ball', 'Cat', 'Dog', 'Egg']);
+  });
+
+  test('Every letter and number has a word', () {
+    for (final g in LetterGroup.values) {
+      for (final item in LetterCatalog.byGroup(g)) {
+        expect(item.word, isNotNull, reason: item.id);
+        expect(item.word!.trim(), isNotEmpty, reason: item.id);
+      }
+    }
+  });
+
+  test('Every registered word picture exists on disk', () {
+    for (final g in [LetterGroup.arabic, LetterGroup.english]) {
+      for (final item in LetterCatalog.byGroup(g)) {
+        if (item.wordPicture == null) continue;
+        expect(File(item.wordPicture!).existsSync(), isTrue, reason: item.wordPicture);
+      }
+    }
   });
 }
