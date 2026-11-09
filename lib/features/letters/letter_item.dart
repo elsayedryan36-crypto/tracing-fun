@@ -11,6 +11,8 @@ class LetterItem {
     required this.picture,
     this.word,
     this.wordPicture,
+    this.letterAudio,
+    this.wordAudio,
   });
 
   /// Stable ID, also used as the key for unlocks and the check grid, e.g. `ar_0`, `en_0`, `num_3`.
@@ -34,6 +36,12 @@ class LetterItem {
 
   /// Word picture (AI-generated illustration). Null until the picture is made.
   final String? wordPicture;
+
+  /// Spoken letter name (asset path), or null until the sound is made.
+  final String? letterAudio;
+
+  /// Spoken word (asset path), or null until the sound is made.
+  final String? wordAudio;
 
   /// Outline SVG shown on the tracing screen.
   String get outline => 'assets/letters/outlines/$id.svg';
@@ -85,6 +93,15 @@ class LetterCatalog {
     'en_0', 'en_1', 'en_2', 'en_3', 'en_4', 'en_5', 'en_11', 'en_18',
   };
 
+  /// Letters that have spoken audio in assets/audio/ (letter name and word).
+  static const Set<String> _audioIds = {'ar_0', 'ar_1', 'ar_2', 'ar_3', 'ar_4'};
+
+  static String? _letterAudioFor(String id) =>
+      _audioIds.contains(id) ? 'assets/audio/${id}_letter.mp3' : null;
+
+  static String? _wordAudioFor(String id) =>
+      _audioIds.contains(id) ? 'assets/audio/${id}_word.mp3' : null;
+
   static String? _wordPictureFor(String id) =>
       _pictured.contains(id) ? 'assets/images/words/$id.png' : null;
 
@@ -118,6 +135,8 @@ class LetterCatalog {
               picture: _pictureFor(i),
               word: _arabicWords[i],
               wordPicture: _wordPictureFor('ar_$i'),
+              letterAudio: _letterAudioFor('ar_$i'),
+              wordAudio: _wordAudioFor('ar_$i'),
             ),
         ];
       case LetterGroup.english:
@@ -132,6 +151,8 @@ class LetterCatalog {
               picture: _pictureFor(i + 3),
               word: _englishWords[i],
               wordPicture: _wordPictureFor('en_$i'),
+              letterAudio: _letterAudioFor('en_$i'),
+              wordAudio: _wordAudioFor('en_$i'),
             ),
         ];
       case LetterGroup.numbers:

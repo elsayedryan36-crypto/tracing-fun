@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../letters/letter_item.dart';
+import '../letters/letter_voice.dart';
 import 'letter_check.dart';
 
 class TracingState {
@@ -42,7 +43,9 @@ class TracingState {
 
 /// Traces a letter against its outline (see letter_check.dart).
 class TracingCubit extends Cubit<TracingState> {
-  TracingCubit(this.item) : super(const TracingState());
+  TracingCubit(this.item) : super(const TracingState()) {
+    LetterVoice.play(item.letterAudio);
+  }
 
   static const int gridSize = LetterCheck.grid;
 

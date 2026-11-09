@@ -10,3 +10,6 @@
 
 ## Sounds
 - Not yet chosen. See `docs/sound-sources.md`.
+
+## Voices (letter and word sounds)
+- Letter names and words in `assets/audio/` are generated speech, made with a voice chosen by the owner (Arabic and English). Owner to confirm the voice terms of the speech service before release.

@@ -7,13 +7,34 @@ import '../../presentation/common/resources/color_manager.dart';
 import '../../presentation/common/resources/font_manager.dart';
 import '../../presentation/common/resources/values_manager.dart';
 import '../letters/letter_item.dart';
+import '../letters/letter_voice.dart';
 
 /// Shown after a successful trace.
 ///
 /// v1: shows the reward picture. Colouring with the painting tools is planned
 /// for a later version (see TRACING_APP_SPEC.md).
-class RewardScreen extends StatelessWidget {
+class RewardScreen extends StatefulWidget {
   const RewardScreen({super.key, required this.item});
+
+  final LetterItem item;
+
+  @override
+  State<RewardScreen> createState() => _RewardScreenState();
+}
+
+class _RewardScreenState extends State<RewardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    LetterVoice.play(widget.item.wordAudio);
+  }
+
+  @override
+  Widget build(BuildContext context) => _RewardBody(item: widget.item);
+}
+
+class _RewardBody extends StatelessWidget {
+  const _RewardBody({required this.item});
 
   final LetterItem item;
 

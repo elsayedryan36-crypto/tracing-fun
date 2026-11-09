@@ -68,4 +68,15 @@ void main() {
       }
     }
   });
+
+  test('Every registered sound file exists on disk', () {
+    for (final g in [LetterGroup.arabic, LetterGroup.english]) {
+      for (final item in LetterCatalog.byGroup(g)) {
+        for (final path in [item.letterAudio, item.wordAudio]) {
+          if (path == null) continue;
+          expect(File(path).existsSync(), isTrue, reason: path);
+        }
+      }
+    }
+  });
 }
