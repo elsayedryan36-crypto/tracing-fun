@@ -9,6 +9,7 @@ import '../../presentation/common/resources/values_manager.dart';
 import '../../presentation/common/services/sound_service.dart';
 import '../letters/letter_item.dart';
 import '../settings/settings_cubit.dart';
+import 'letter_check.dart';
 import 'tracing_cubit.dart';
 
 /// Trace a letter with one finger. No ads on this screen.
@@ -133,6 +134,13 @@ class _TraceArea extends StatelessWidget {
                         BlendMode.srcIn,
                       ),
                     ),
+                    // Dotted guide along the letter's centre line, to follow.
+                    CustomPaint(
+                      size: Size(side, side),
+                      painter: _GuideDotsPainter(
+                        LetterCheck.centreLine(item.id),
+                      ),
+                    ),
                     CustomPaint(
                       size: Size(side, side),
                       painter: _StrokePainter(state.strokes),
@@ -189,4 +197,35 @@ class _StrokePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _StrokePainter oldDelegate) =>
       oldDelegate.strokes != strokes;
+}
+
+/// Draws a row of small dots along the letter's centre line (one dot per grid cell).
+class _GuideDotsPainter extends CustomPainter {
+  _GuideDotsPainter(this.cells);
+
+  final Set<int> cells;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cell = LetterCheck.grid;
+    final cellW = size.width / cell;
+    final cellH = size.height / cell;
+    final dot = Paint()
+      ..color = ColorManager.pinkPrimary.withValues(alpha: 0.6)
+      ..style = PaintingStyle.fill;
+    final radius = size.shortestSide * 0.018;
+    for (final c in cells) {
+      final row = c ~/ cell;
+      final col = c % cell;
+      canvas.drawCircle(
+        Offset((col + 0.5) * cellW, (row + 0.5) * cellH),
+        radius,
+        dot,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _GuideDotsPainter oldDelegate) =>
+      oldDelegate.cells != cells;
 }

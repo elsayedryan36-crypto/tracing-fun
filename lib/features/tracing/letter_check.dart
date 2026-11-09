@@ -3,22 +3,27 @@ import 'letter_masks.dart';
 /// Checks a child's trace against the letter's shape.
 ///
 /// The letter is a 32×32 grid (see letter_masks.dart): its ink, and its one-cell
-/// centre line. The child's finger marks cells on the same grid. Two numbers
-/// decide the result:
+/// centre line. The child's finger marks cells on the same grid.
 ///
-/// * coverage: how much of the letter's centre line the child has covered.
-/// * stray: how much of the child's trace is far from the letter.
+/// A letter counts as traced only when:
+/// * most of the whole centre line is covered ([minCoverage]), and
+/// * every separate part of the letter is covered (for example the dot of ب), so
+///   a child cannot finish after tracing only one part ([minPartCoverage]), and
+/// * the trace does not wander far from the letter ([maxStray]).
 ///
-/// The check is forgiving on purpose (ages 3–5): the trace may be rough, as
-/// long as it follows the letter and does not wander far off it.
+/// The check is forgiving about shape (a rough trace is fine), but it does not
+/// let the child finish early.
 class LetterCheck {
   LetterCheck._();
 
   static const int grid = letterMaskGrid;
   static const int cellCount = grid * grid;
 
-  /// Share of the centre line the child must cover.
-  static const double minCoverage = 0.6;
+  /// Share of the whole centre line the child must cover.
+  static const double minCoverage = 0.9;
+
+  /// Share of each separate part of the letter the child must cover.
+  static const double minPartCoverage = 0.8;
 
   /// Share of the child's marked cells allowed to be far from the letter.
   static const double maxStray = 0.3;
@@ -28,25 +33,36 @@ class LetterCheck {
 
   static final Map<String, _Target> _targets = {};
 
-  /// The centre-line cells of a letter (used by tests and to show progress).
+  /// The centre-line cells of a letter (used to draw the dotted guide).
   static Set<int> centreLine(String id) => _target(id).core;
+
+  /// The separate parts of the centre line (for example a letter and its dot).
+  static List<Set<int>> parts(String id) => _target(id).parts;
+
+  /// Share of the whole centre line covered (0..1).
+  static double coverage(String id, Set<int> marked) {
+    final t = _target(id);
+    if (t.core.isEmpty) return 0;
+    return _share(t.core, marked);
+  }
 
   static bool passes(String id, Set<int> marked) {
     if (marked.isEmpty) return false;
     final t = _target(id);
-    return coverage(id, marked) >= minCoverage &&
-        _strayRatio(t, marked) <= maxStray;
+    if (t.core.isEmpty) return false;
+    if (_share(t.core, marked) < minCoverage) return false;
+    for (final part in t.parts) {
+      if (_share(part, marked) < minPartCoverage) return false;
+    }
+    return _strayRatio(t, marked) <= maxStray;
   }
 
-  /// Share of the centre line covered (0..1).
-  static double coverage(String id, Set<int> marked) {
-    final t = _target(id);
-    if (t.core.isEmpty) return 0;
+  static double _share(Set<int> target, Set<int> marked) {
     var hit = 0;
-    for (final cell in t.core) {
+    for (final cell in target) {
       if (marked.contains(cell)) hit++;
     }
-    return hit / t.core.length;
+    return hit / target.length;
   }
 
   static double _strayRatio(_Target t, Set<int> marked) {
@@ -67,8 +83,10 @@ class LetterCheck {
       }
       final ink = _decode(inkHex);
       final centre = _decode(centreHex);
+      final core = centre.isEmpty ? ink : centre;
       return _Target(
-        core: centre.isEmpty ? ink : centre,
+        core: core,
+        parts: _components(core),
         near: _dilate(ink, tolerance),
       );
     });
@@ -78,11 +96,40 @@ class LetterCheck {
     final value = BigInt.parse(hex, radix: 16);
     final cells = <int>{};
     for (var i = 0; i < cellCount; i++) {
-      // Bit 0 of the value is the last cell (bottom-right).
+      // The first cell is the most significant bit.
       final bit = (value >> (cellCount - 1 - i)) & BigInt.one;
       if (bit == BigInt.one) cells.add(i);
     }
     return cells;
+  }
+
+  /// Splits cells into groups that touch each other (8 neighbours).
+  static List<Set<int>> _components(Set<int> cells) {
+    final left = {...cells};
+    final parts = <Set<int>>[];
+    while (left.isNotEmpty) {
+      final start = left.first;
+      final part = <int>{};
+      final stack = [start];
+      left.remove(start);
+      while (stack.isNotEmpty) {
+        final cell = stack.removeLast();
+        part.add(cell);
+        final r = cell ~/ grid;
+        final c = cell % grid;
+        for (var dr = -1; dr <= 1; dr++) {
+          for (var dc = -1; dc <= 1; dc++) {
+            final nr = r + dr;
+            final nc = c + dc;
+            if (nr < 0 || nc < 0 || nr >= grid || nc >= grid) continue;
+            final next = nr * grid + nc;
+            if (left.remove(next)) stack.add(next);
+          }
+        }
+      }
+      parts.add(part);
+    }
+    return parts;
   }
 
   static Set<int> _dilate(Set<int> cells, int radius) {
@@ -104,10 +151,13 @@ class LetterCheck {
 }
 
 class _Target {
-  const _Target({required this.core, required this.near});
+  const _Target({required this.core, required this.parts, required this.near});
 
-  /// Centre line cells the child should cover.
+  /// Centre-line cells the child should cover.
   final Set<int> core;
+
+  /// The centre line split into separate parts.
+  final List<Set<int>> parts;
 
   /// Cells close enough to the letter that a trace there is not stray.
   final Set<int> near;

@@ -49,4 +49,27 @@ void main() {
     expect(LetterCheck.coverage('en_1', half), lessThan(LetterCheck.minCoverage));
     expect(LetterCheck.passes('en_1', half), isFalse);
   });
+
+  test('ب has its dot as a separate part', () {
+    expect(LetterCheck.parts('ar_1').length, greaterThanOrEqualTo(2));
+  });
+
+  test('a trace that misses one part (the dot) does not pass', () {
+    final parts = LetterCheck.parts('ar_1');
+    final marked = {
+      for (final p in parts.skip(1)) ...p,
+    };
+    expect(LetterCheck.passes('ar_1', marked), isFalse);
+  });
+
+  test('a trace that covers only about 80% of the letter does not pass', () {
+    final line = LetterCheck.centreLine('en_1').toList()..sort();
+    final most = line.take((line.length * 0.8).floor()).toSet();
+    expect(LetterCheck.passes('en_1', most), isFalse);
+  });
+
+  test('a finished trace of every part passes for an Arabic letter', () {
+    final line = LetterCheck.centreLine('ar_1');
+    expect(LetterCheck.passes('ar_1', line), isTrue);
+  });
 }
