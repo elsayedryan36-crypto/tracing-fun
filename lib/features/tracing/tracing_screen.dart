@@ -4,12 +4,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../presentation/common/localization/app_language.dart';
 import '../../presentation/common/resources/color_manager.dart';
+import '../../presentation/common/resources/font_manager.dart';
 import '../../presentation/common/resources/routs_manager.dart';
 import '../../presentation/common/resources/values_manager.dart';
 import '../../presentation/common/services/sound_service.dart';
 import '../letters/letter_item.dart';
 import '../settings/settings_cubit.dart';
-import 'letter_check.dart';
+import 'letter_paths.dart';
 import 'tracing_cubit.dart';
 
 /// Trace a letter with one finger. No ads on this screen.
@@ -95,7 +96,7 @@ class _TraceArea extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
-    final side = (size.height * 0.7).clamp(0.0, size.width * 0.5);
+    final side = (size.height * 0.6).clamp(0.0, size.width * 0.5);
     final cubit = context.read<TracingCubit>();
 
     return BlocBuilder<TracingCubit, TracingState>(
@@ -110,6 +111,20 @@ class _TraceArea extends StatelessWidget {
                 color: ColorManager.darkPrimary,
               ),
             ),
+            if (item.word != null) ...[
+              SizedBox(height: AppPx.p4),
+              Text(
+                item.word!,
+                style: TextStyle(
+                  fontFamily: item.group == LetterGroup.arabic
+                      ? FontConstants.arabicFont
+                      : null,
+                  fontSize: AppPx.p16,
+                  fontWeight: FontWeight.w800,
+                  color: ColorManager.darkPrimary,
+                ),
+              ),
+            ],
             SizedBox(height: AppPx.p8),
             GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -134,11 +149,11 @@ class _TraceArea extends StatelessWidget {
                         BlendMode.srcIn,
                       ),
                     ),
-                    // Dotted guide along the letter's centre line, to follow.
+                    // Dotted path to follow, with a green start dot and arrows.
                     CustomPaint(
                       size: Size(side, side),
-                      painter: _GuideDotsPainter(
-                        LetterCheck.centreLine(item.id),
+                      painter: _PathGuidePainter(
+                        letterPaths[item.id] ?? const [],
                       ),
                     ),
                     CustomPaint(
@@ -199,33 +214,55 @@ class _StrokePainter extends CustomPainter {
       oldDelegate.strokes != strokes;
 }
 
-/// Draws a row of small dots along the letter's centre line (one dot per grid cell).
-class _GuideDotsPainter extends CustomPainter {
-  _GuideDotsPainter(this.cells);
+/// Draws the guide path: dots along each stroke, a green start dot, and an arrow.
+class _PathGuidePainter extends CustomPainter {
+  _PathGuidePainter(this.strokes);
 
-  final Set<int> cells;
+  final List<List<List<double>>> strokes;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final cell = LetterCheck.grid;
-    final cellW = size.width / cell;
-    final cellH = size.height / cell;
     final dot = Paint()
-      ..color = ColorManager.pinkPrimary.withValues(alpha: 0.6)
+      ..color = ColorManager.pinkPrimary.withValues(alpha: 0.7)
       ..style = PaintingStyle.fill;
+    final start = Paint()
+      ..color = ColorManager.green
+      ..style = PaintingStyle.fill;
+    final arrow = Paint()
+      ..color = ColorManager.darkPrimary
+      ..strokeWidth = size.shortestSide * 0.012
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
     final radius = size.shortestSide * 0.018;
-    for (final c in cells) {
-      final row = c ~/ cell;
-      final col = c % cell;
-      canvas.drawCircle(
-        Offset((col + 0.5) * cellW, (row + 0.5) * cellH),
-        radius,
-        dot,
-      );
+
+    for (final stroke in strokes) {
+      if (stroke.isEmpty) continue;
+      final points = [
+        for (final p in stroke) Offset(p[0] * size.width, p[1] * size.height),
+      ];
+      for (final p in points) {
+        canvas.drawCircle(p, radius, dot);
+      }
+      canvas.drawCircle(points.first, radius * 1.6, start);
+      if (points.length >= 2) {
+        final mid = points.length ~/ 2;
+        final from = points[mid > 0 ? mid - 1 : 0];
+        final to = points[mid < points.length - 1 ? mid + 1 : points.length - 1];
+        final d = to - from;
+        final len = d.distance;
+        if (len > 0) {
+          final u = d / len;
+          final tip = points[mid];
+          final back = tip - u * radius * 3;
+          final side = Offset(-u.dy, u.dx) * radius * 1.4;
+          canvas.drawLine(tip, back + side, arrow);
+          canvas.drawLine(tip, back - side, arrow);
+        }
+      }
     }
   }
 
   @override
-  bool shouldRepaint(covariant _GuideDotsPainter oldDelegate) =>
-      oldDelegate.cells != cells;
+  bool shouldRepaint(covariant _PathGuidePainter oldDelegate) =>
+      oldDelegate.strokes != strokes;
 }

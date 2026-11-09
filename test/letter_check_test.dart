@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tracing_app/features/tracing/letter_check.dart';
+import 'package:tracing_app/features/tracing/letter_paths.dart';
 
 void main() {
   test('tracing the letter centre line passes', () {
@@ -72,5 +73,19 @@ void main() {
   test('a finished trace of every part passes for an Arabic letter', () {
     final line = LetterCheck.centreLine('ar_1');
     expect(LetterCheck.passes('ar_1', line), isTrue);
+  });
+
+  test('every letter has a guide path with at least one stroke', () {
+    for (final id in [
+      for (var i = 0; i < 28; i++) 'ar_$i',
+      for (var i = 0; i < 26; i++) 'en_$i',
+    ]) {
+      final strokes = letterPaths[id];
+      expect(strokes, isNotNull, reason: id);
+      expect(strokes!, isNotEmpty, reason: id);
+      for (final stroke in strokes) {
+        expect(stroke, isNotEmpty, reason: id);
+      }
+    }
   });
 }
