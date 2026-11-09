@@ -20,10 +20,10 @@ class LetterCheck {
   static const int cellCount = grid * grid;
 
   /// Share of the whole centre line the child must cover.
-  static const double minCoverage = 0.9;
+  static const double minCoverage = 0.8;
 
   /// Share of each separate part of the letter the child must cover.
-  static const double minPartCoverage = 0.8;
+  static const double minPartCoverage = 0.7;
 
   /// Share of the child's marked cells allowed to be far from the letter.
   static const double maxStray = 0.3;
@@ -57,10 +57,13 @@ class LetterCheck {
     return _strayRatio(t, marked) <= maxStray;
   }
 
+  /// A centre-line cell counts as covered when the trace is on it or next to it.
+  /// Small fingers are not exact, so this gives about one cell of tolerance.
   static double _share(Set<int> target, Set<int> marked) {
+    final reach = _dilate(marked, 1);
     var hit = 0;
     for (final cell in target) {
-      if (marked.contains(cell)) hit++;
+      if (reach.contains(cell)) hit++;
     }
     return hit / target.length;
   }

@@ -62,11 +62,12 @@ void main() {
     expect(LetterCheck.passes('ar_1', marked), isFalse);
   });
 
-  test('a trace that covers only about 80% of the letter does not pass', () {
+  test('a trace that covers only about half the letter does not pass', () {
     final line = LetterCheck.centreLine('en_1').toList()..sort();
-    final most = line.take((line.length * 0.8).floor()).toSet();
-    expect(LetterCheck.passes('en_1', most), isFalse);
+    final half = line.take((line.length * 0.5).floor()).toSet();
+    expect(LetterCheck.passes('en_1', half), isFalse);
   });
+
 
   test('a finished trace of every part passes for an Arabic letter', () {
     final line = LetterCheck.centreLine('ar_1');
