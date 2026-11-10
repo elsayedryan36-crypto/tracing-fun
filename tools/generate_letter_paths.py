@@ -133,6 +133,24 @@ def to_points(stroke):
     return [[round((c + 0.5) / N, 4), round((r + 0.5) / N, 4)] for r, c in picked]
 
 
+def sample_line(line):
+    """Points every SPACING along a polyline in normalised units (same dot spacing as the skeletons)."""
+    spacing = SAMPLE_EVERY / N
+    out = [list(line[0])]
+    carry = 0.0
+    for (ax, ay), (bx, by) in zip(line, line[1:]):
+        seg = ((bx - ax) ** 2 + (by - ay) ** 2) ** 0.5
+        d = spacing - carry
+        while d <= seg:
+            t = d / seg
+            out.append([ax + (bx - ax) * t, ay + (by - ay) * t])
+            d += spacing
+        carry = seg - (d - spacing)
+    if abs(out[-1][0] - line[-1][0]) + abs(out[-1][1] - line[-1][1]) > 1e-6:
+        out.append(list(line[-1]))
+    return [[round(x, 4), round(y, 4)] for x, y in out]
+
+
 def main():
     ar_ttf = os.path.join(ROOT, 'assets', 'fonts', 'NotoKufiArabic-Bold.ttf')
     en_ttf = os.path.join(ROOT, 'tools', 'source-fonts', 'Fredoka-Variable.ttf')
@@ -152,13 +170,17 @@ def main():
     ]
     total = 0
     for item_id, ch, ttf in entries:
-        grid = ink_grid(ttf, ch, N)
-        skel = thin(grid, N)
-        pixels = [(r, c) for r in range(N) for c in range(N) if skel[r][c]]
-        strokes = strokes_from_skeleton(pixels)
-        # Drop tiny specks, but keep single-point strokes (dots such as the dot of ب).
-        strokes = [s for s in strokes if len(s) >= 1]
-        pts = [to_points(s) for s in strokes]
+        if item_id in base.EXAMPLE_IDS:
+            # The A's strokes are the three centre lines drawn for it (see generate_letter_assets.py).
+            pts = [sample_line(line) for line in base.example_centre_norm()]
+        else:
+            grid = ink_grid(ttf, ch, N)
+            skel = thin(grid, N)
+            pixels = [(r, c) for r in range(N) for c in range(N) if skel[r][c]]
+            strokes = strokes_from_skeleton(pixels)
+            # Drop tiny specks, but keep single-point strokes (dots such as the dot of ب).
+            strokes = [s for s in strokes if len(s) >= 1]
+            pts = [to_points(s) for s in strokes]
         total += len(pts)
         lines.append(f"  '{item_id}': [")
         for stroke in pts:

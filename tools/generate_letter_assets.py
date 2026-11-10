@@ -144,6 +144,112 @@ def thin_zhang_suen(bits):
     return [img[y][x] for y in range(GRID) for x in range(GRID)]
 
 
+# Letters drawn by hand instead of from a font. The A is the drawing from the
+# coloring app (assets/letters/1.svg). Only its pink body and black outline are
+# kept; its dotted guides, arrows and background are dropped, because the app
+# draws its own guide (see generate_letter_paths.py).
+EXAMPLE_SVG = os.path.join(ROOT, 'assets', 'letters', '1.svg')
+EXAMPLE_IDS = {'en_0'}
+KEEP_FILLS = {'#ece1ee', '#060103'}
+
+
+def _example_items():
+    import re
+    import xml.etree.ElementTree as ET
+    root = ET.parse(EXAMPLE_SVG).getroot()
+    items = []
+    for el in root.iter():
+        m = re.search(r'fill:\s*(#[0-9a-fA-F]{6})', el.get('style', ''))
+        if m and m.group(1).lower() in KEEP_FILLS and el.get('d'):
+            items.append((m.group(1).lower(), el.get('d')))
+    return items
+
+
+def _svg_doc(items, size, transform=''):
+    body = ''.join(f'<path d="{d}" fill="{c}"/>' for c, d in items)
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" '
+            f'viewBox="0 0 {size} {size}"><g transform="{transform}">{body}</g></svg>')
+
+
+def _render_ink(svg_text, size, tag):
+    """Render an SVG to a greyscale image; returns the image (white background)."""
+    import subprocess
+    import tempfile
+    from PIL import Image as PILImage
+    with tempfile.NamedTemporaryFile('w', suffix=f'-{tag}.svg', delete=False,
+                                     encoding='utf-8') as fh:
+        fh.write(svg_text)
+        src = fh.name
+    out = src.replace('.svg', '.png')
+    try:
+        subprocess.run(['convert', '-background', 'white', '-density', '72', src,
+                        '-flatten', '-resize', f'{size}x{size}!', out], check=True)
+        return PILImage.open(out).convert('L')
+    finally:
+        for p in (src, out):
+            if os.path.exists(p):
+                os.remove(p)
+
+
+def _ink_only(img):
+    """Black where the letter is (pink body or black outline), white elsewhere."""
+    return img.point(lambda v: 255 if v < 250 else 0)
+
+
+def _example_fit():
+    """Scale and offset that put the example A's ink box in the centred FIT square."""
+    raw = _ink_only(_render_ink(_svg_doc(_example_items(), 1920, ''), 1920, 'raw'))
+    x0, y0, x1, y1 = raw.getbbox()
+    s = FIT / max(x1 - x0, y1 - y0)
+    tx = BOX / 2 - s * (x0 + x1) / 2
+    ty = BOX / 2 - s * (y0 + y1) / 2
+    return s, tx, ty
+
+
+def example_outline_svg():
+    """The A as a 1000-unit outline, scaled to the same FIT box as the font letters."""
+    s, tx, ty = _example_fit()
+    return _svg_doc(_example_items(), int(BOX), f'translate({tx:.4f} {ty:.4f}) scale({s:.6f})')
+
+
+# Centre line of the example A, in the page units of assets/letters/1.svg (1920x1080),
+# read from the picture: the two legs and the crossbar. Each line runs in the
+# order the child should trace it (top to bottom, then left to right).
+EXAMPLE_CENTRE_PAGE = [
+    [(960, 160), (660, 920)],    # 1: left leg, from the top to the left foot
+    [(960, 160), (1264, 920)],   # 2: right leg, from the top to the right foot
+    [(772, 636), (1150, 636)],   # 3: crossbar, from left to right
+]
+
+
+def example_centre_norm():
+    """The three centre lines in normalised 0..1 tracing-area coordinates."""
+    s, tx, ty = _example_fit()
+    return [[((x * s + tx) / BOX, (y * s + ty) / BOX) for x, y in line]
+            for line in EXAMPLE_CENTRE_PAGE]
+
+
+def example_centre_rows(n):
+    """n x n one-cell centre line (rows of 0/1) for the example A."""
+    grid = [[0] * n for _ in range(n)]
+    for line in example_centre_norm():
+        for (ax, ay), (bx, by) in zip(line, line[1:]):
+            steps = int(max(abs(bx - ax), abs(by - ay)) * n * 4) + 1
+            for k in range(steps + 1):
+                t = k / steps
+                cx = min(n - 1, max(0, int((ax + (bx - ax) * t) * n)))
+                cy = min(n - 1, max(0, int((ay + (by - ay) * t) * n)))
+                grid[cy][cx] = 1
+    return grid
+
+
+def example_rows(n):
+    """n x n grid rows (1 = letter ink) for the example A, same rule as mask_for."""
+    img = _ink_only(_render_ink(example_outline_svg(), int(BOX), 'grid'))
+    small = img.resize((n, n), Image.BOX)
+    return [[1 if small.getpixel((x, y)) >= 128 else 0 for x in range(n)] for y in range(n)]
+
+
 def main():
     outlines_dir = os.path.join(ROOT, 'assets', 'letters', 'outlines')
     os.makedirs(outlines_dir, exist_ok=True)
@@ -162,6 +268,13 @@ def main():
     masks = {}
     centres = {}
     for item_id, ch, font, ttf_path in entries:
+        if item_id in EXAMPLE_IDS:
+            with open(os.path.join(outlines_dir, f'{item_id}.svg'), 'w', encoding='utf-8') as fh:
+                fh.write(example_outline_svg())
+            bits = [v for row in example_rows(GRID) for v in row]
+            masks[item_id] = bits_to_hex(bits)
+            centres[item_id] = bits_to_hex([v for row in example_centre_rows(GRID) for v in row])
+            continue
         with open(os.path.join(outlines_dir, f'{item_id}.svg'), 'w', encoding='utf-8') as fh:
             fh.write(svg_for(font, ch))
         if ttf_path is None:
