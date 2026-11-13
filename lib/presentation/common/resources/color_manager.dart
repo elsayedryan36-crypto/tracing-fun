@@ -54,6 +54,14 @@ class ColorManager {
   static const Color materialYellow = Color(0xFFFFEB3B);
   static const Color transparent = Color(0x00000000);
 
+  // Tracing and gallery look (see the approved mockup)
+  static const Color skyTop = Color(0xffbfe9ff);
+  static const Color skyMiddle = Color(0xffe8d9ff);
+  static const Color skyBottom = Color(0xffffe3f1);
+  static const Color cardShadow = Color(0xffc9b8e0);
+  static const Color cardPicture = Color(0xfff4eefc);
+  static const Color titlePurple = Color(0xff3b2f52);
+
   // Hex colours moved from widgets (same values)
   static const Color hex14FFFFFF = Color(0x14FFFFFF);
   static const Color hex1F142846 = Color(0x1F142846);

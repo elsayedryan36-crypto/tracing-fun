@@ -87,10 +87,7 @@ class LetterCatalog {
   /// Letters that have a word picture file in assets/images/words/.
   /// Add an ID here when its picture file is added.
   static const Set<String> _pictured = {
-    'ar_0', 'ar_1', 'ar_2', 'ar_3', 'ar_4', 'ar_5', 'ar_6', 'ar_7', 'ar_8', 'ar_9',
-    'ar_10', 'ar_11', 'ar_12', 'ar_13', 'ar_14', 'ar_15', 'ar_16', 'ar_17', 'ar_18',
-    'ar_19', 'ar_20', 'ar_21', 'ar_22', 'ar_23', 'ar_24',
-    'en_0', 'en_1', 'en_2', 'en_3', 'en_4', 'en_5', 'en_11', 'en_18',
+    'ar_0', 'ar_1', 'ar_2', 'ar_3', 'ar_4', 'ar_5', 'ar_6', 'ar_7', 'ar_8', 'ar_9', 'ar_10', 'ar_11', 'ar_12', 'ar_13', 'ar_14', 'ar_15', 'ar_16', 'ar_17', 'ar_18', 'ar_19', 'ar_20', 'ar_21', 'ar_22', 'ar_23', 'ar_24', 'ar_25', 'ar_26', 'ar_27', 'en_0', 'en_1', 'en_2', 'en_3', 'en_4', 'en_5', 'en_6', 'en_7', 'en_8', 'en_9', 'en_10', 'en_11', 'en_12', 'en_13', 'en_14', 'en_15', 'en_18',
   };
 
   /// Letters that have spoken audio in assets/audio/ (letter name and word).

@@ -20,7 +20,7 @@ class LetterCheck {
   static const int cellCount = grid * grid;
 
   /// Share of the whole centre line the child must cover.
-  static const double minCoverage = 0.8;
+  static const double minCoverage = 0.95;
 
   /// Share of each separate part of the letter the child must cover.
   static const double minPartCoverage = 0.7;

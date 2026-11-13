@@ -44,10 +44,23 @@ class TracingScreen extends StatelessWidget {
             ),
             actions: const [_SoundButtons()],
           ),
-          body: Center(
-            child: ValueListenableBuilder<String>(
-              valueListenable: AppLanguage.current,
-              builder: (context, _, _) => _TraceArea(item: item),
+          body: DecoratedBox(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  ColorManager.skyTop,
+                  ColorManager.skyMiddle,
+                  ColorManager.skyBottom,
+                ],
+              ),
+            ),
+            child: Center(
+              child: ValueListenableBuilder<String>(
+                valueListenable: AppLanguage.current,
+                builder: (context, _, _) => _TraceArea(item: item),
+              ),
             ),
           ),
         ),

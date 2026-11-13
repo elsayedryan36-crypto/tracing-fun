@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sizer/sizer.dart';
 import 'package:tracing_app/features/letters/letter_item.dart';
+import 'package:tracing_app/features/letters/letters_screen.dart';
 import 'package:tracing_app/features/reward/reward_screen.dart';
 import 'package:tracing_app/features/settings/settings_cubit.dart';
 import 'package:tracing_app/features/tracing/tracing_screen.dart';
@@ -36,4 +39,22 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  testWidgets('letters gallery fits 640x360 and can scroll', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    _landscape(tester);
+    await tester.pumpWidget(
+      Sizer(
+        builder: (context, orientation, deviceType) => MaterialApp(
+          home: LettersScreen(group: LetterGroup.arabic),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle(const Duration(seconds: 2));
+    expect(tester.takeException(), isNull);
+    expect(find.byType(GridView), findsOneWidget);
+    await tester.drag(find.byType(GridView), const Offset(0, -200));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
 }

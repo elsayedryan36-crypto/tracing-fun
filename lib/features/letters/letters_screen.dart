@@ -92,13 +92,14 @@ class _Grid extends StatelessWidget {
           buildWhen: (p, c) => p.unlockedIds != c.unlockedIds,
           builder: (context, state) {
             return GridView.count(
-              crossAxisCount: 6,
+              crossAxisCount: 5,
               padding: EdgeInsets.all(AppPx.p12),
               mainAxisSpacing: AppPx.p8,
               crossAxisSpacing: AppPx.p8,
               children: [
                 for (final item in items)
                   _LetterTile(
+                    index: items.indexOf(item),
                     item: item,
                     isOpen: cubit.isOpen(item),
                     onTap: () {
@@ -119,53 +120,122 @@ class _Grid extends StatelessWidget {
   }
 }
 
-class _LetterTile extends StatelessWidget {
+class _LetterTile extends StatefulWidget {
   const _LetterTile({
+    required this.index,
     required this.item,
     required this.isOpen,
     required this.onTap,
   });
 
+  final int index;
   final LetterItem item;
   final bool isOpen;
   final VoidCallback onTap;
 
   @override
+  State<_LetterTile> createState() => _LetterTileState();
+}
+
+class _LetterTileState extends State<_LetterTile> {
+  bool _shown = false;
+  bool _pressed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Cards fade and rise in one after another, a little faster for later cards.
+    Future.delayed(Duration(milliseconds: 30 * (widget.index % 20)), () {
+      if (mounted) setState(() => _shown = true);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(AppPx.p12),
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: isOpen ? ColorManager.white : ColorManager.lightGrey,
-          borderRadius: BorderRadius.circular(AppPx.p12),
-          border: Border.all(color: ColorManager.grey),
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Text(
-              item.glyph,
-              style: TextStyle(
-                fontFamily: item.group == LetterGroup.arabic
-                    ? FontConstants.arabicFont
-                    : null,
-                fontSize: AppPx.p30,
-                fontWeight: FontWeight.w800,
-                color: isOpen ? ColorManager.darkPrimary : ColorManager.grey,
-              ),
+    final item = widget.item;
+    final isOpen = widget.isOpen;
+    final picture = item.wordPicture;
+    final glyphStyle = TextStyle(
+      fontFamily: item.group == LetterGroup.arabic ? FontConstants.arabicFont : null,
+      fontSize: AppPx.p30,
+      fontWeight: FontWeight.w800,
+      color: isOpen ? ColorManager.titlePurple : ColorManager.grey,
+    );
+
+    Widget card = Container(
+      decoration: BoxDecoration(
+        color: ColorManager.white,
+        borderRadius: BorderRadius.circular(AppPx.p12),
+        boxShadow: const [
+          BoxShadow(color: ColorManager.cardShadow, offset: Offset(0, 3)),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          Expanded(
+            flex: 3,
+            child: Container(
+              color: ColorManager.cardPicture,
+              alignment: Alignment.center,
+              child: picture != null
+                  ? Image.asset(picture, fit: BoxFit.contain)
+                  : Text(item.glyph, style: glyphStyle),
             ),
-            if (!isOpen)
-              Positioned(
-                top: AppPx.p4,
-                right: AppPx.p4,
-                child: Icon(
-                  Icons.lock,
-                  size: AppPx.p16,
-                  color: ColorManager.grey,
+          ),
+          Expanded(
+            flex: 1,
+            child: Center(
+              child: Text(
+                item.glyph,
+                style: TextStyle(
+                  fontFamily: item.group == LetterGroup.arabic ? FontConstants.arabicFont : null,
+                  fontSize: AppPx.p16,
+                  fontWeight: FontWeight.w800,
+                  color: ColorManager.titlePurple,
                 ),
               ),
-          ],
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (!isOpen) {
+      card = Stack(
+        children: [
+          ColorFiltered(
+            colorFilter: const ColorFilter.mode(ColorManager.lightGrey, BlendMode.saturation),
+            child: card,
+          ),
+          Positioned(
+            top: AppPx.p4,
+            right: AppPx.p4,
+            child: Icon(Icons.lock, size: AppPx.p16, color: ColorManager.grey),
+          ),
+        ],
+      );
+    }
+
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 300),
+      opacity: _shown ? 1 : 0,
+      child: AnimatedSlide(
+        duration: const Duration(milliseconds: 300),
+        offset: _shown ? Offset.zero : const Offset(0, 0.15),
+        child: AnimatedScale(
+          duration: const Duration(milliseconds: 120),
+          scale: _pressed ? 0.92 : 1,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTapDown: (_) => setState(() => _pressed = true),
+            onTapCancel: () => setState(() => _pressed = false),
+            onTapUp: (_) {
+              setState(() => _pressed = false);
+              widget.onTap();
+            },
+            child: card,
+          ),
         ),
       ),
     );
