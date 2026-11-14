@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../presentation/common/localization/app_language.dart';
 import '../../presentation/common/resources/color_manager.dart';
@@ -150,30 +149,36 @@ class _TraceArea extends StatelessWidget {
               child: SizedBox(
                 width: side,
                 height: side,
-                child: Stack(
-                  children: [
-                    // Guide: the letter outline in light grey, for the child to follow.
-                    SvgPicture.asset(
-                      item.outline,
-                      width: side,
-                      height: side,
-                      colorFilter: ColorFilter.mode(
-                        ColorManager.lightGrey,
-                        BlendMode.srcIn,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: ColorManager.white.withValues(alpha: 0.87),
+                    borderRadius: BorderRadius.circular(AppPx.p12),
+                    boxShadow: const [
+                      BoxShadow(color: ColorManager.cardShadow, offset: Offset(0, 4)),
+                    ],
+                  ),
+                  child: Stack(
+                    children: [
+                      // Dotted light-grey outline of the letter.
+                      CustomPaint(
+                        size: Size(side, side),
+                        painter: _OutlineDotsPainter(
+                          letterOutlineDots[item.id] ?? const [],
+                        ),
                       ),
-                    ),
-                    // Dotted path to follow, with a green start dot and arrows.
-                    CustomPaint(
-                      size: Size(side, side),
-                      painter: _PathGuidePainter(
-                        letterPaths[item.id] ?? const [],
+                      // Centre-line guide: pink dots, a green start dot and arrows.
+                      CustomPaint(
+                        size: Size(side, side),
+                        painter: _PathGuidePainter(
+                          letterPaths[item.id] ?? const [],
+                        ),
                       ),
-                    ),
-                    CustomPaint(
-                      size: Size(side, side),
-                      painter: _StrokePainter(state.strokes),
-                    ),
-                  ],
+                      CustomPaint(
+                        size: Size(side, side),
+                        painter: _StrokePainter(state.strokes),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -278,4 +283,26 @@ class _PathGuidePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _PathGuidePainter oldDelegate) =>
       oldDelegate.strokes != strokes;
+}
+
+/// Dotted outline of the letter, in light grey.
+class _OutlineDotsPainter extends CustomPainter {
+  _OutlineDotsPainter(this.dots);
+
+  final List<List<double>> dots;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = ColorManager.lightGrey
+      ..style = PaintingStyle.fill;
+    final radius = size.shortestSide * 0.011;
+    for (final d in dots) {
+      canvas.drawCircle(Offset(d[0] * size.width, d[1] * size.height), radius, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _OutlineDotsPainter oldDelegate) =>
+      oldDelegate.dots != dots;
 }

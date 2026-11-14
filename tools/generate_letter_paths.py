@@ -133,6 +133,22 @@ def to_points(stroke):
     return [[round((c + 0.5) / N, 4), round((r + 0.5) / N, 4)] for r, c in picked]
 
 
+def outline_dots(grid, n):
+    """Dots on the edge of the letter: every other edge cell, so the outline reads as dotted."""
+    dots = []
+    for r in range(n):
+        for c in range(n):
+            if not grid[r][c]:
+                continue
+            edge = any(
+                not (0 <= r + dr < n and 0 <= c + dc < n and grid[r + dr][c + dc])
+                for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1))
+            )
+            if edge and (r + c) % 2 == 0:
+                dots.append([round((c + 0.5) / n, 4), round((r + 0.5) / n, 4)])
+    return dots
+
+
 def sample_line(line):
     """Points every SPACING along a polyline in normalised units (same dot spacing as the skeletons)."""
     spacing = SAMPLE_EVERY / N
@@ -168,10 +184,12 @@ def main():
         '',
         'const Map<String, List<List<List<double>>>> letterPaths = {',
     ]
+    outline_lines = []
     total = 0
     for item_id, ch, ttf in entries:
         if item_id in base.EXAMPLE_IDS:
             # The A's strokes are the three centre lines drawn for it (see generate_letter_assets.py).
+            grid = base.example_rows(N)
             pts = [sample_line(line) for line in base.example_centre_norm()]
         else:
             grid = ink_grid(ttf, ch, N)
@@ -187,6 +205,13 @@ def main():
             body = ', '.join(f'[{x}, {y}]' for x, y in stroke)
             lines.append(f'    [{body}],')
         lines.append('  ],')
+        outline_lines.append(f"  '{item_id}': [" + ', '.join(
+            f'[{x}, {y}]' for x, y in outline_dots(grid, N)) + '],')
+    lines.append('};')
+    lines.append('')
+    lines.append('// Dotted outline of each letter: light-grey dots on the letter edge (normalised 0..1).')
+    lines.append('const Map<String, List<List<double>>> letterOutlineDots = {')
+    lines.extend(outline_lines)
     lines.append('};')
     lines.append('')
 
