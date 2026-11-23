@@ -3,7 +3,7 @@
 Run from the project root (after tools/generate_letter_assets.py):
     python3 tools/generate_letter_paths.py
 
-Each letter's centre line is found from the glyph shape (skeleton on a 64x64
+Each letter's centre line is found from the glyph shape (skeleton on a 128x128
 grid), split into strokes, and written as normalised points (0..1) to
 lib/features/tracing/letter_paths.dart. Points are in the same space as the
 tracing area, so they line up with the outline and with the check grid.
@@ -18,10 +18,10 @@ sys.path.insert(0, os.path.dirname(__file__))
 import generate_letter_assets as base  # noqa: E402  (same glyphs and fonts)
 
 ROOT = base.ROOT
-N = 64            # path resolution
+N = 128           # path resolution (finer skeleton keeps every stroke, including the dot of ب)
 BOX = 1000.0
 FIT = 800.0
-SAMPLE_EVERY = 3  # keep every 3rd point (dotted spacing)
+SAMPLE_EVERY = 5  # keep every 5th cell along the centre line (dot spacing)
 
 
 def ink_grid(ttf_path, ch, n):
@@ -133,22 +133,6 @@ def to_points(stroke):
     return [[round((c + 0.5) / N, 4), round((r + 0.5) / N, 4)] for r, c in picked]
 
 
-def outline_dots(grid, n):
-    """Dots on the edge of the letter: every other edge cell, so the outline reads as dotted."""
-    dots = []
-    for r in range(n):
-        for c in range(n):
-            if not grid[r][c]:
-                continue
-            edge = any(
-                not (0 <= r + dr < n and 0 <= c + dc < n and grid[r + dr][c + dc])
-                for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1))
-            )
-            if edge and (r + c) % 2 == 0:
-                dots.append([round((c + 0.5) / n, 4), round((r + 0.5) / n, 4)])
-    return dots
-
-
 def sample_line(line):
     """Points every SPACING along a polyline in normalised units (same dot spacing as the skeletons)."""
     spacing = SAMPLE_EVERY / N
@@ -184,7 +168,6 @@ def main():
         '',
         'const Map<String, List<List<List<double>>>> letterPaths = {',
     ]
-    outline_lines = []
     total = 0
     for item_id, ch, ttf in entries:
         if item_id in base.EXAMPLE_IDS:
@@ -205,14 +188,8 @@ def main():
             body = ', '.join(f'[{x}, {y}]' for x, y in stroke)
             lines.append(f'    [{body}],')
         lines.append('  ],')
-        outline_lines.append(f"  '{item_id}': [" + ', '.join(
-            f'[{x}, {y}]' for x, y in outline_dots(grid, N)) + '],')
     lines.append('};')
     lines.append('')
-    lines.append('// Dotted outline of each letter: light-grey dots on the letter edge (normalised 0..1).')
-    lines.append('const Map<String, List<List<double>>> letterOutlineDots = {')
-    lines.extend(outline_lines)
-    lines.append('};')
     lines.append('')
 
     out = os.path.join(ROOT, 'lib', 'features', 'tracing', 'letter_paths.dart')

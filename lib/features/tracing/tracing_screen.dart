@@ -159,13 +159,6 @@ class _TraceArea extends StatelessWidget {
                   ),
                   child: Stack(
                     children: [
-                      // Dotted light-grey outline of the letter.
-                      CustomPaint(
-                        size: Size(side, side),
-                        painter: _OutlineDotsPainter(
-                          letterOutlineDots[item.id] ?? const [],
-                        ),
-                      ),
                       // Centre-line guide: pink dots, a green start dot and arrows.
                       CustomPaint(
                         size: Size(side, side),
@@ -283,26 +276,4 @@ class _PathGuidePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _PathGuidePainter oldDelegate) =>
       oldDelegate.strokes != strokes;
-}
-
-/// Dotted outline of the letter, in light grey.
-class _OutlineDotsPainter extends CustomPainter {
-  _OutlineDotsPainter(this.dots);
-
-  final List<List<double>> dots;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = ColorManager.lightGrey
-      ..style = PaintingStyle.fill;
-    final radius = size.shortestSide * 0.011;
-    for (final d in dots) {
-      canvas.drawCircle(Offset(d[0] * size.width, d[1] * size.height), radius, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _OutlineDotsPainter oldDelegate) =>
-      oldDelegate.dots != dots;
 }

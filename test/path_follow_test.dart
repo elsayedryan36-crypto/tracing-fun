@@ -70,11 +70,11 @@ void main() {
     expect(follow.passes, isFalse);
   });
 
-  test('every letter has a dotted outline', () {
+  test('every letter has a dotted centre-line path', () {
     for (final item in LetterCatalog.byGroup(LetterGroup.arabic)
         .followedBy(LetterCatalog.byGroup(LetterGroup.english))) {
-      expect(letterOutlineDots[item.id], isNotNull, reason: item.id);
-      expect(letterOutlineDots[item.id], isNotEmpty, reason: item.id);
+      expect(letterPaths[item.id], isNotNull, reason: item.id);
+      expect(letterPaths[item.id], isNotEmpty, reason: item.id);
     }
   });
 }
